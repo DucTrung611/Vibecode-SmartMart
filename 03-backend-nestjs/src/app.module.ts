@@ -9,7 +9,9 @@ import { DatabaseModule } from './core/database/database.module';
 import { AllExceptionsFilter } from './shared/filters/all-exceptions.filter';
 import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
 import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
+import { RolesGuard } from './shared/guards/roles.guard';
 import { IdentityModule } from './modules/identity/identity.module';
+import { CatalogModule } from './modules/catalog/catalog.module';
 
 @Module({
   imports: [
@@ -20,6 +22,7 @@ import { IdentityModule } from './modules/identity/identity.module';
     }),
     DatabaseModule,
     IdentityModule,
+    CatalogModule,
   ],
   controllers: [AppController],
   providers: [
@@ -27,6 +30,7 @@ import { IdentityModule } from './modules/identity/identity.module';
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: TransformInterceptor },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: RolesGuard },
   ],
 })
 export class AppModule {}
