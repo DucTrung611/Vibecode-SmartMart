@@ -2,6 +2,7 @@ import Image from "next/image";
 import { ProductDetail, ProductVariant } from "../types/catalog.types";
 import { formatPrice } from "../utils/format-price";
 import { Button } from "@/shared/components/Button";
+import { StockBadge } from "@/features/inventory";
 
 interface ProductDetailViewProps {
   product: ProductDetail;
@@ -58,12 +59,15 @@ export function ProductDetailView({ product, variants }: ProductDetailViewProps)
             </span>
             <div className="flex flex-wrap gap-2">
               {variants.map((variant) => (
-                <span
+                <div
                   key={variant.id}
-                  className="rounded-lg border border-(--color-border) px-3 py-1.5 text-sm text-(--color-foreground)"
+                  className="flex flex-col gap-1 rounded-lg border border-(--color-border) px-3 py-1.5"
                 >
-                  {Object.values(variant.optionSummary).join(" / ") || variant.sku}
-                </span>
+                  <span className="text-sm text-(--color-foreground)">
+                    {Object.values(variant.optionSummary).join(" / ") || variant.sku}
+                  </span>
+                  <StockBadge variantId={variant.id} />
+                </div>
               ))}
             </div>
           </div>
