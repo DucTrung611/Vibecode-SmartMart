@@ -11,9 +11,9 @@ SmartMart's frontend is a **single Next.js 14 (App Router) app**, organized by f
 **Tech stack justification:**
 - **Next.js App Router** — the product catalog is SEO- and perf-sensitive (public product pages), while cart/chat/visual-search are highly interactive. Server Components render catalog pages with near-zero client JS; `'use client'` is opt-in only where interactivity is needed.
 - **TanStack Query** — the backend is a REST API with a `success/data/meta` envelope and cursor pagination (`API_SPEC.md` §3–4); Query gives caching, retry, and background refetch for free instead of hand-rolled `useEffect` fetching.
-- **Zustand** — deliberately minimal global state (auth session, cart badge, theme) without Redux's boilerplate; feature-local stores need no provider wiring.
+- **React Context** — deliberately minimal global state (auth session, cart badge, theme) without adding a state-management dependency; feature-local state that outlives a component still starts with `useState`/`useReducer` in a feature-local context before reaching for anything global.
 - **Tailwind CSS** — utility-first, no CSS-in-JS runtime cost, keeps styles co-located with the 5–10 person team's component-per-file convention.
-- **Axios** — one interceptor layer handles `Authorization: Bearer` attachment and silent token refresh on `401 AUTH_TOKEN_EXPIRED` (`API_SPEC.md` §2) for every feature service, in one place.
+- **`fetch` (native)** — one wrapper (`apiFetch` in `shared/lib/api-client.ts`) handles `Authorization: Bearer` attachment and silent token refresh on `401 AUTH_TOKEN_EXPIRED` (`API_SPEC.md` §2) for every feature service, in one place; chosen over Axios specifically to use Next.js's built-in `fetch` caching (`next: {revalidate}`) for public data later (catalog, etc).
 
 ```mermaid
 flowchart TB
@@ -21,9 +21,9 @@ flowchart TB
     subgraph Next.js App - App Router
         RSC[Server Components<br/>catalog, product pages]
         CC[Client Components<br/>cart, chat, visual-search]
-        MW[middleware.ts<br/>auth guard]
+        MW[proxy.ts<br/>auth guard]
     end
-    API[shared/lib<br/>Axios client + interceptors]
+    API[shared/lib<br/>fetch wrapper + refresh logic]
     BE[SmartMart Backend API<br/>API_SPEC.md]
 
     U --> MW --> RSC & CC
@@ -38,7 +38,7 @@ flowchart TB
 src/
 ├── app/                           # Next.js App Router — entry point, routes, providers
 │   ├── layout.tsx                 # root layout: QueryClientProvider, ThemeProvider
-│   ├── middleware.ts              # auth guard for protected route groups
+│   ├── proxy.ts              # auth guard for protected route groups
 │   ├── (public)/                  # no auth required
 │   │   └── products/[slug]/page.tsx
 │   ├── (shop)/                    # optional-auth (guest checkout allowed)
@@ -49,12 +49,15 @@ src/
 │   ├── components/                # design-system primitives (Button, Modal, Toast)
 │   ├── hooks/                     # useDebounce, useMediaQuery
 │   ├── lib/                       # base API client — see note below
-│   │   ├── api-client.ts          # Axios instance, JWT interceptor, refresh logic
+│   │   ├── auth-token.ts          # access token held outside React, for apiFetch's retry logic
+│   │   ├── api-client.ts          # fetch wrapper (apiFetch), Authorization attach, refresh logic
 │   │   ├── query-client.ts        # TanStack QueryClient config
 │   │   └── sse-client.ts          # shared SSE stream reader used by chat
-│   ├── stores/
-│   │   ├── session.store.ts       # auth: user, tokens, cart badge count
-│   │   └── ui.store.ts            # theme, nav drawer — the only other global store
+│   ├── context/
+│   │   ├── session-context.tsx    # auth: user, loading state (token lives in shared/lib/auth-token.ts)
+│   │   └── ui-context.tsx         # theme, nav drawer — the only other global context
+│   ├── providers/
+│   │   └── providers.tsx          # composes QueryClientProvider + SessionProvider, mounted in app/layout.tsx
 │   ├── types/                     # API envelope types, shared enums (mirror backend)
 │   └── utils/                     # formatCurrency, cn() classnames helper
 ├── features/
@@ -80,8 +83,8 @@ features/chat/
 │   └── useChatStream.ts          # wraps shared/lib/sse-client.ts
 ├── services/
 │   └── chat.service.ts           # calls shared/lib/api-client.ts
-├── stores/
-│   └── chat-draft.store.ts       # feature-local Zustand, e.g. unsent draft text
+├── context/
+│   └── chat-draft-context.tsx    # feature-local Context, e.g. unsent draft text
 ├── types/
 │   └── chat.types.ts
 ├── utils/
@@ -100,21 +103,21 @@ flowchart TD
     B --> C[Hook<br/>useProductSearch]
     C --> D[Service<br/>catalog.service.ts]
     D --> E[Backend API]
-    C -.->|if shared across components| F[Feature Store<br/>Zustand]
+    C -.->|if shared across components| F[Feature Context]
     E --> G[TanStack Query cache]
     G --> H[UI Update]
     F -.-> H
 ```
 
-- **Server state** (API data) never lives in a Zustand store — TanStack Query is the single source of truth, keyed by feature (`['products', filters]`).
-- **Feature store** only holds client-only state that outlives a single component and isn't server data (draft form values, open/closed UI toggles shared across siblings).
+- **Server state** (API data) never lives in a Context — TanStack Query is the single source of truth, keyed by feature (`['products', filters]`).
+- **Feature context** only holds client-only state that outlives a single component and isn't server data (draft form values, open/closed UI toggles shared across siblings).
 
 ## 5. Cross-feature Communication
 
 | Method | Use case | Preference |
 |---|---|---|
 | **URL / Router** | Filters, selected tab, product id — features compose at the route, not directly | First choice |
-| **Global store** | Auth/session, cart badge count, theme — `shared/stores/` only | Minimal, cross-cutting only |
+| **Global context** | Auth/session, cart badge count, theme — `shared/context/` only | Minimal, cross-cutting only |
 | **Event emitter** | Decoupled side effects, e.g. `chat` emits `product-added-to-cart` so `cart` refetches without importing it | Rare — last resort |
 
 No feature imports another feature's internals — only its `index.ts` (`PROJECT-RULES.md` §3).
@@ -122,7 +125,7 @@ No feature imports another feature's internals — only its `index.ts` (`PROJECT
 ## 6. Routing Structure
 
 - **Public routes** — `(public)` group: product listing/detail, category pages, brand pages, login/register. Rendered as Server Components, statically generated or ISR-revalidated (product pages: `revalidate: 300`).
-- **Protected routes** — `(account)` group: order history, addresses, saved payment methods. `middleware.ts` checks the session cookie; redirects to `/login?redirect=` on miss.
+- **Protected routes** — `(account)` group: order history, addresses, saved payment methods. `proxy.ts` checks the session cookie; redirects to `/login?redirect=` on miss.
 - **Optional-auth routes** — `(shop)` group: cart, checkout, chat — work for both guest (`X-Anonymous-Id`) and authenticated users per `API_SPEC.md` §2.
 - **Route config per feature** — each feature owns only its components; the route file in `app/` is the only place that maps a URL to a feature's exported page component. Feature folders are not aware of their own URL.
 - **Lazy loading** — Next.js code-splits per route automatically. Heavy, rarely-used client widgets (visual-search image uploader, chat window) are additionally wrapped in `next/dynamic({ ssr: false })` so they don't inflate the initial bundle of pages that merely link to them.
@@ -132,22 +135,22 @@ No feature imports another feature's internals — only its `index.ts` (`PROJECT
 | State Type | Location | Example |
 |---|---|---|
 | Server state | TanStack Query (per-feature `hooks/`) | Product list, cart contents, order history |
-| Global UI | `shared/stores/ui.store.ts` (Zustand) | Theme, nav drawer open |
-| Auth | `shared/stores/session.store.ts` (Zustand) | User, tokens, cart badge count |
-| Feature state | `features/[x]/stores/*.store.ts` (Zustand) | Catalog filter draft, chat input draft |
+| Global UI | `shared/context/ui-context.tsx` | Theme, nav drawer open |
+| Auth | `shared/context/session-context.tsx` + `shared/lib/auth-token.ts` (token, outside React) | User, access token, cart badge count |
+| Feature state | `features/[x]/context/*-context.tsx` | Catalog filter draft, chat input draft |
 | Local UI | Component `useState` | Modal open, hover/focus state |
 
 ## 8. API Layer
 
 ```mermaid
 flowchart LR
-    A[shared/lib/api-client.ts<br/>Axios instance + JWT interceptor] --> B[features/x/services<br/>catalog.service.ts]
+    A[shared/lib/api-client.ts<br/>apiFetch + refresh-and-retry] --> B[features/x/services<br/>catalog.service.ts]
     B --> C[features/x/hooks<br/>useProductSearch]
     C --> D[features/x/components<br/>ProductList]
 ```
 
-- `shared/lib/api-client.ts` is the **only** place `axios.create()` is called; it owns base URL, JWT attach, and the `401` refresh-and-retry loop.
-- Feature services call the shared client and return typed data (or throw `ApiError` carrying the `error.code` from `API_SPEC.md` §5) — never raw Axios responses.
+- `shared/lib/api-client.ts` is the **only** place `fetch` is called against the backend; it owns base URL, `Authorization` attach (reading the token from `shared/lib/auth-token.ts`), and the `401 AUTH_TOKEN_EXPIRED` refresh-and-retry loop.
+- Feature services call `apiFetch` and return typed data (or throw `ApiError` carrying the `error.code` from `API_SPEC.md` §5) — never a raw `Response`.
 - Hooks are the **only** place `useQuery`/`useMutation` appears; components never touch TanStack Query directly.
 
 ## 9. Shared vs. Features
@@ -161,8 +164,8 @@ flowchart LR
 
 ## [Next.js-Specific Additions]
 
-- **Server vs. Client boundary:** default every component to a Server Component; add `'use client'` only at the leaf that needs hooks/state/interactivity (a form, a query hook, a Zustand-consuming component) — not at the top of a whole feature.
+- **Server vs. Client boundary:** default every component to a Server Component; add `'use client'` only at the leaf that needs hooks/state/interactivity (a form, a query hook, a Context consumer) — not at the top of a whole feature.
 - **SSR/SSG/ISR:** product/category/brand pages are ISR (`revalidate`) for freshness without a rebuild; cart/orders/chat are fully dynamic (`force-dynamic` or client-fetched) since they're per-user.
 - **Streaming & Suspense:** product detail pages wrap the "similar products" / "reviews" sections in `<Suspense>` so the primary content (price, add-to-cart) isn't blocked on slower recommendation queries.
 - **Images:** all product imagery goes through `next/image` for automatic optimization/CDN sizing; the visual-search upload widget is the one place raw `<input type="file">` is used, not `next/image`.
-- **`middleware.ts`:** the single place route-group auth is enforced — feature code never re-checks auth itself, it trusts the route already gated it.
+- **`proxy.ts`:** the single place route-group auth is enforced — feature code never re-checks auth itself, it trusts the route already gated it.
