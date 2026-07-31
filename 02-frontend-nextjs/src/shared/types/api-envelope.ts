@@ -1,7 +1,13 @@
+export interface PaginationMeta {
+  limit: number;
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 export interface SuccessEnvelope<T> {
   success: true;
   data: T;
-  meta: { timestamp: string; pagination?: unknown };
+  meta: { timestamp: string; pagination?: PaginationMeta };
 }
 
 export interface ErrorEnvelope {

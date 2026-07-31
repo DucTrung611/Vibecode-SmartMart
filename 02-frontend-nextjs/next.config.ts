@@ -8,6 +8,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  images: {
+    // Product images are served by the backend (cross-origin from the
+    // frontend's own port) — next/image requires the host allow-listed.
+    remotePatterns: [
+      { protocol: "http", hostname: "localhost", port: "6060", pathname: "/static/**" },
+    ],
+  },
 };
 
 export default nextConfig;

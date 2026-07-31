@@ -1,4 +1,4 @@
-import { ApiEnvelope, ApiError } from "@/shared/types/api-envelope";
+import { ApiEnvelope, ApiError, SuccessEnvelope } from "@/shared/types/api-envelope";
 import { getAccessToken, setAccessToken } from "./auth-token";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:6060/v1";
@@ -18,6 +18,17 @@ export async function apiFetch<T>(
   path: string,
   init: ApiFetchInit = {},
 ): Promise<T> {
+  const envelope = await apiFetchEnvelope<T>(path, init);
+  return envelope.data;
+}
+
+// Same as apiFetch, but keeps `meta` (e.g. `meta.pagination` — API_SPEC.md
+// §4) — needed by callers doing cursor-paginated listing (catalog), which
+// apiFetch's unwrapped return value has nowhere to carry.
+export async function apiFetchEnvelope<T>(
+  path: string,
+  init: ApiFetchInit = {},
+): Promise<SuccessEnvelope<T>> {
   const { body, _isRetry, ...rest } = init;
   const token = getAccessToken();
 
@@ -36,19 +47,19 @@ export async function apiFetch<T>(
   // body — calling response.json() on it throws "Unexpected end of JSON
   // input", which silently routed successful logouts into the error path.
   if (response.status === 204) {
-    return undefined as T;
+    return { success: true, data: undefined as T, meta: { timestamp: "" } };
   }
 
   const envelope = (await response.json()) as ApiEnvelope<T>;
 
   if (envelope.success) {
-    return envelope.data;
+    return envelope;
   }
 
   if (envelope.error.code === "AUTH_TOKEN_EXPIRED" && !_isRetry) {
     const refreshed = await refreshAccessToken();
     if (refreshed) {
-      return apiFetch<T>(path, { ...init, _isRetry: true });
+      return apiFetchEnvelope<T>(path, { ...init, _isRetry: true });
     }
   }
 
