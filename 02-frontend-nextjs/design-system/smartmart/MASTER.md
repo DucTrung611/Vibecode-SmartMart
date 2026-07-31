@@ -7,11 +7,10 @@
 ---
 
 **Project:** SmartMart
-**Generated:** 2026-07-31 (hand-curated via `ui-ux-pro-max` domain searches — see note below)
 **Category:** E-commerce
-**Direction:** Modern minimal, trustworthy
+**Direction:** Trust purple + transaction green — a distinct accent pair so "brand" (purple) and "money-moving action" (green, add-to-cart/checkout) never compete for the same color.
 
-> **Note:** `--design-system` auto-reasoning kept matching noisy categories (e.g. "Vibrant & Block-based", "Real-Time / Operations Landing") because the `E-commerce` product-type rule hardcodes a bold/vibrant style regardless of query keywords. This file was assembled by hand from targeted `--domain style/color/typography/product` searches instead, to match the "modern minimal, trustworthy" direction actually chosen for SmartMart. Re-run `--design-system` freely for exploration, but don't let it silently overwrite this file — regenerate only on purpose (`--force`) and re-review against this note.
+> **Note:** This file must match `src/app/globals.css` (source of truth for the actual CSS variables shipped) and `src/app/layout.tsx` (font loading). If you regenerate this file via `--design-system`, diff the resulting palette/typography against those two files before committing — don't let either drift out of sync with the other.
 
 ---
 
@@ -19,40 +18,33 @@
 
 ### Color Palette
 
-Neutral slate + single blue accent — maps directly onto Tailwind's default `slate`/`blue` scales, no custom Tailwind config needed.
+| Role | Hex (light) | Hex (dark) | CSS Variable |
+|------|-----|-----|--------------|
+| Primary | `#7C3AED` | `#7C3AED` | `--color-primary` |
+| On Primary | `#FFFFFF` | `#FFFFFF` | `--color-on-primary` |
+| Secondary | `#A78BFA` | `#C4B5FD` | `--color-secondary` |
+| Muted foreground | `#6D28D9` | `#C4B5FD` | `--color-muted-foreground` |
+| Accent/CTA | `#16A34A` | `#16A34A` | `--color-accent` |
+| Accent hover | `#15803D` | `#15803D` | `--color-accent-hover` |
+| Background | `#FAF5FF` | `#2E1065` | `--color-background` |
+| Foreground | `#4C1D95` | `#EDE9FE` | `--color-foreground` |
+| Muted | `#ECEEF9` | `#4C1D95` | `--color-muted` |
+| Border | `#DDD6FE` | `#6D28D9` | `--color-border` |
+| Destructive | `#DC2626` | `#DC2626` | `--color-destructive` |
+| Ring | `#7C3AED` | `#7C3AED` | `--color-ring` |
 
-| Role | Hex | CSS Variable | Tailwind equivalent |
-|------|-----|--------------|----------------------|
-| Primary | `#0F172A` | `--color-primary` | `slate-900` |
-| On Primary | `#FFFFFF` | `--color-on-primary` | `white` |
-| Secondary | `#334155` | `--color-secondary` | `slate-700` |
-| Accent/CTA | `#2563EB` | `--color-accent` | `blue-600` |
-| Background | `#FFFFFF` | `--color-background` | `white` |
-| Foreground | `#0F172A` | `--color-foreground` | `slate-900` |
-| Muted | `#F1F5F9` | `--color-muted` | `slate-100` |
-| Border | `#E2E8F0` | `--color-border` | `slate-200` |
-| Destructive | `#DC2626` | `--color-destructive` | `red-600` |
-| Ring | `#2563EB` | `--color-ring` | `blue-600` |
+Dark-mode overrides apply via `@media (prefers-color-scheme: dark)` in `globals.css` — only the rows above with a different dark value actually change; the rest hold their light value in both themes (accent/CTA stays green either way, so "add to cart" reads identically in light/dark).
 
-**Color Notes:** Near-black slate for text/primary actions (trust, high contrast, no gimmicks), one saturated blue reserved for the single "buy/CTA" action so it never competes with anything else on the page. Source: `ui-ux-pro-max` `--domain color`, cross-checked against `B2B Service` and `Knowledge Base/Documentation` results (both scored "trustworthy/professional") and simplified to the smallest palette.
+**Color Notes:** Purple carries brand/trust (primary actions, headings, focus ring); green is reserved *only* for the money-moving CTA (add-to-cart, checkout, confirm) so it's never ambiguous which button actually charges the user or commits an order. `--color-secondary` (`#A78BFA`/light-lavender) is decorative only — it fails 4.5:1 contrast on the light background, so body/secondary text uses `--color-muted-foreground` instead.
 
 ### Typography
 
-- **Heading Font:** Inter
-- **Body Font:** Inter
-- **Mood:** minimal, clean, swiss, functional, neutral, professional
-- **Pairing name:** "Minimal Swiss" (`ui-ux-pro-max` `--domain typography`)
-- **Google Fonts:** [Inter](https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap)
+- **Heading Font:** Rubik (`--font-rubik`, loaded via `next/font/google` in `layout.tsx`)
+- **Body Font:** Nunito Sans (`--font-nunito-sans`, loaded via `next/font/google` in `layout.tsx`)
+- **Mood:** ecommerce, clean, shopping, product, retail, conversion
+- **Google Fonts:** [Rubik + Nunito Sans](https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;500;600;700&family=Rubik:wght@300;400;500;600;700&display=swap)
 
-**CSS Import:**
-```css
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-```
-
-**Tailwind config:**
-```js
-fontFamily: { sans: ['Inter', 'sans-serif'] }
-```
+Fonts are loaded through `next/font/google` (self-hosted, zero layout shift) rather than a `<link>`/`@import` — see `src/app/layout.tsx`. Tailwind consumes them via `--font-sans: var(--font-nunito-sans)` / `--font-heading: var(--font-rubik)` in the `@theme inline` block of `globals.css`.
 
 ### Spacing Variables
 
@@ -68,26 +60,26 @@ fontFamily: { sans: ['Inter', 'sans-serif'] }
 
 ### Shadow Depths
 
-Minimal style — shadows are subtle/rare by default (`Minimalism & Swiss Style` guidance: "no box-shadow unless necessary").
-
 | Level | Value | Usage |
 |-------|-------|-------|
-| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift (cards on hover only) |
-| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.06)` | Dropdowns, popovers |
-| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.08)` | Modals |
-| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.1)` | Rare — hero-level emphasis only |
+| `--shadow-sm` | `0 1px 2px rgba(0,0,0,0.05)` | Subtle lift |
+| `--shadow-md` | `0 4px 6px rgba(0,0,0,0.1)` | Cards, buttons |
+| `--shadow-lg` | `0 10px 15px rgba(0,0,0,0.1)` | Modals, dropdowns |
+| `--shadow-xl` | `0 20px 25px rgba(0,0,0,0.15)` | Hero images, featured cards |
 
 ---
 
 ## Component Specs
 
+Use the CSS variables above, not hardcoded hex — component examples below reference them directly so they stay correct if the palette is retuned.
+
 ### Buttons
 
 ```css
-/* Primary Button (single CTA color site-wide) */
+/* Primary Button (money-moving CTA — add to cart, checkout, confirm) */
 .btn-primary {
-  background: #2563EB;
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-on-primary);
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -96,14 +88,14 @@ Minimal style — shadows are subtle/rare by default (`Minimalism & Swiss Style`
 }
 
 .btn-primary:hover {
-  background: #1D4ED8;
+  background: var(--color-accent-hover);
 }
 
-/* Secondary Button */
+/* Secondary Button (brand/navigation actions) */
 .btn-secondary {
   background: transparent;
-  color: #0F172A;
-  border: 1px solid #E2E8F0;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
   padding: 12px 24px;
   border-radius: 8px;
   font-weight: 600;
@@ -112,7 +104,7 @@ Minimal style — shadows are subtle/rare by default (`Minimalism & Swiss Style`
 }
 
 .btn-secondary:hover {
-  border-color: #0F172A;
+  background: var(--color-muted);
 }
 ```
 
@@ -120,8 +112,8 @@ Minimal style — shadows are subtle/rare by default (`Minimalism & Swiss Style`
 
 ```css
 .card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
+  background: var(--color-background);
+  border: 1px solid var(--color-border);
   border-radius: 12px;
   padding: 24px;
   transition: all 200ms ease;
@@ -129,8 +121,8 @@ Minimal style — shadows are subtle/rare by default (`Minimalism & Swiss Style`
 }
 
 .card:hover {
-  box-shadow: var(--shadow-sm);
-  border-color: #CBD5E1;
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-secondary);
 }
 ```
 
@@ -139,16 +131,16 @@ Minimal style — shadows are subtle/rare by default (`Minimalism & Swiss Style`
 ```css
 .input {
   padding: 12px 16px;
-  border: 1px solid #E2E8F0;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   font-size: 16px;
   transition: border-color 200ms ease;
 }
 
 .input:focus {
-  border-color: #2563EB;
+  border-color: var(--color-ring);
   outline: none;
-  box-shadow: 0 0 0 3px #2563EB20;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-ring) 20%, transparent);
 }
 ```
 
@@ -156,12 +148,12 @@ Minimal style — shadows are subtle/rare by default (`Minimalism & Swiss Style`
 
 ```css
 .modal-overlay {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(76, 29, 149, 0.5);
   backdrop-filter: blur(4px);
 }
 
 .modal {
-  background: white;
+  background: var(--color-background);
   border-radius: 16px;
   padding: 32px;
   box-shadow: var(--shadow-lg);
@@ -174,32 +166,33 @@ Minimal style — shadows are subtle/rare by default (`Minimalism & Swiss Style`
 
 ## Style Guidelines
 
-**Style:** Minimalism & Swiss Style
+**Style:** E-commerce conversion-focused — product photography and price carry the visual weight; UI chrome (borders, shadows) stays light so it never competes with product imagery.
 
-**Keywords:** Clean, simple, spacious, functional, white space, high contrast, geometric, sans-serif, grid-based, essential
+**Keywords:** Clean, conversion-oriented, product-forward, one CTA color, purple brand accent, green transaction accent, grid-based, approachable.
 
-**Best For:** Enterprise apps, dashboards, professional tools — adapted here for a trust-first e-commerce storefront (product-heavy pages stay grid-based and low-decoration so product photography carries the visual weight, not chrome).
+**Best For:** Product listing/detail pages, cart, checkout — anywhere the user needs one unambiguous "next action" button.
 
-**Key Effects:** Subtle hover (200-250ms), smooth transitions, sharp/no shadows by default, clear type hierarchy, fast loading.
+**Key Effects:** Subtle hover (200–250ms), smooth transitions, soft shadows on hover only, clear type hierarchy, fast loading.
 
 ### Page Pattern
 
-**Pattern Name:** Feature-Rich Showcase (E-commerce landing pattern, kept but restyled minimal — no bold blocks/gradients)
+**Pattern Name:** Feature-Rich Showcase (E-commerce landing pattern)
 
-- **Conversion Strategy:** Product imagery and price are the focus; UI chrome stays out of the way. Trust signals (reviews, secure checkout badge) near the CTA, not decorative.
-- **CTA Placement:** Single accent-color "Add to cart" / "Shop now" button, repeated at natural decision points (product card, product detail, sticky mobile bar) — never more than one accent-colored action visible at once.
+- **Conversion Strategy:** Product imagery and price are the focus; the green accent appears only on the single "buy" action per screen. Trust signals (reviews, secure checkout badge) sit near the CTA, not as decoration.
+- **CTA Placement:** Single green "Add to cart"/"Checkout" button, repeated at natural decision points (product card, product detail, sticky mobile bar) — never more than one green action visible at once. Purple is for navigation/secondary actions and brand elements (logo, active nav state, focus ring).
 - **Section Order (home/catalog landing):** 1. Hero (product photography + one headline + one CTA), 2. Category grid, 3. Featured/best-selling products, 4. Trust strip (reviews, shipping/returns policy), 5. Newsletter/footer.
 
 ---
 
 ## Anti-Patterns (Do NOT Use)
 
+- ❌ Green used for anything other than the single money-moving CTA per screen
 - ❌ Multiple competing accent colors on one screen
-- ❌ Gradients, glassmorphism, or decorative shadows (contradicts "minimal, trustworthy")
+- ❌ Gradients, glassmorphism, or decorative shadows beyond the tokens above
 - ❌ Emojis as icons — use SVG icons (Heroicons/Lucide, per `PROJECT-RULES.md`)
 - ❌ Missing `cursor-pointer` on clickable elements
 - ❌ Layout-shifting hover transforms
-- ❌ Low contrast text — maintain 4.5:1 minimum
+- ❌ Low contrast text — maintain 4.5:1 minimum (use `--color-muted-foreground`, not `--color-secondary`, for body text)
 - ❌ Instant state changes — always transition (150–300ms)
 - ❌ Invisible focus states
 
@@ -219,4 +212,4 @@ Before delivering any UI code, verify:
 - [ ] Responsive: 375px, 768px, 1024px, 1440px
 - [ ] No content hidden behind fixed navbars
 - [ ] No horizontal scroll on mobile
-- [ ] Only one accent-colored CTA visible per screen
+- [ ] Only one green (accent) CTA visible per screen
