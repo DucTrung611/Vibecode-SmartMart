@@ -4,7 +4,7 @@
 
 ## Tech Stack
 - Language: TypeScript
-- Framework: Next.js (App Router) + React
+- Framework: Next.js (App Router)
 - State management: TanStack Query (server state) + Zustand (minimal global state — auth session, cart badge, theme); feature-local Zustand stores need no provider wiring
 - Styling: TailwindCSS
 - Routing: Next.js App Router (file-based, route groups for `(public)` / `(shop)` / `(account)`)
@@ -33,3 +33,6 @@ API responses follow `{ success, data, meta? }` / `{ success: false, error: { co
 
 ### Server vs Client Components
 Server Components by default for data-heavy/SEO pages (catalog, product pages call a feature's `service.ts` directly for server-rendered initial data); `'use client'` only where genuine interactivity is needed (cart, chat, visual-search, forms) — see PROJECT-RULES.md §[Next.js-Specific Additions]
+
+### Design System
+Before building new UI or picking colors/typography, use the `ui-ux-pro-max` skill (stack `nextjs`) instead of inventing a palette — its output must still fit our Tailwind + component conventions (PROJECT-RULES.md §4, §6). If `design-system/smartmart/MASTER.md` exists, read and follow it as the source of truth rather than regenerating; only ask to regenerate if the user explicitly wants a redesign.
