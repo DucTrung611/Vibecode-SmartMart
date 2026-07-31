@@ -16,5 +16,5 @@ export const envValidationSchema = Joi.object({
   JWT_ACCESS_EXPIRES_IN: Joi.string().default('15m'),
   REFRESH_TOKEN_EXPIRES_IN_DAYS: Joi.number().default(30),
 
-  CORS_ORIGIN: Joi.string().default('http://localhost:3001'),
+  CORS_ORIGIN: Joi.string().default('http://localhost:3000'),
 });

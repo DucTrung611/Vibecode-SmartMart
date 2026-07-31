@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "concurrently -n BE,FE -c blue,green \"npm:dev:backend\" \"npm:dev:frontend\"",
     "dev:backend": "npm run start:dev --prefix 03-backend-nestjs",
-    "dev:frontend": "npm run dev --prefix 02-frontend-nextjs -- -p 3001"
+    "dev:frontend": "npm run dev --prefix 02-frontend-nextjs -- -p 3000"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
