@@ -9,7 +9,7 @@ async function bootstrap() {
   app.use(cookieParser());
   // credentials:true is required so the browser accepts the httpOnly
   // refresh_token cookie set by /auth/login across the frontend's
-  // different port (:3001 vs backend :3000) — see identity's context.md.
+  // different port (:3001 vs backend :6060) — see identity's context.md.
   app.enableCors({
     origin: (process.env.CORS_ORIGIN ?? 'http://localhost:3001').split(','),
     credentials: true,
@@ -21,6 +21,6 @@ async function bootstrap() {
       transform: true,
     }),
   );
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 6060);
 }
 void bootstrap();

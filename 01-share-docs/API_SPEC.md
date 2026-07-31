@@ -7,7 +7,7 @@ Read alongside `ARCHITECTURE.md` (module boundaries) and `DATABASE.md` (schema, 
 | | |
 |---|---|
 | **Base URL** | `https://api.smartmart.com/v{version}` — e.g. `https://api.smartmart.com/v1/catalog/products` |
-| **Local dev** | `http://localhost:3000/v1` |
+| **Local dev** | `http://localhost:6060/v1` |
 | **Versioning** | Nest URI versioning (`VersioningType.URI`, `defaultVersion: '1'`, set in `main.ts`). Every controller declares `@Controller({ path: '...', version: '1' })`. |
 | **Version bump rule** | Additive changes (new field, new endpoint) ship in `v1` with no bump. Breaking changes (removed/renamed field, changed status code, changed auth) require `v2`; `v1` stays live until deprecation window closes. |
 | **Content-Type** | `application/json` for all standard requests/responses. `multipart/form-data` only for file upload endpoints (§3). |

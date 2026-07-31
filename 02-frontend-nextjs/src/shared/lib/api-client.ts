@@ -1,7 +1,7 @@
 import { ApiEnvelope, ApiError } from "@/shared/types/api-envelope";
 import { getAccessToken, setAccessToken } from "./auth-token";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000/v1";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:6060/v1";
 
 interface ApiFetchInit extends Omit<RequestInit, "body"> {
   body?: unknown;
