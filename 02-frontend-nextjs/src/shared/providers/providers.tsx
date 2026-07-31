@@ -1,0 +1,20 @@
+"use client";
+
+import { useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { createQueryClient } from "@/shared/lib/query-client";
+import { SessionProvider } from "@/shared/context/session-context";
+import { SessionBootstrap } from "@/features/identity";
+
+export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = useState(createQueryClient);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <SessionProvider>
+        <SessionBootstrap />
+        {children}
+      </SessionProvider>
+    </QueryClientProvider>
+  );
+}
