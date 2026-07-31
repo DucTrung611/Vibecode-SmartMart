@@ -12,6 +12,7 @@ import { JwtAuthGuard } from './shared/guards/jwt-auth.guard';
 import { RolesGuard } from './shared/guards/roles.guard';
 import { IdentityModule } from './modules/identity/identity.module';
 import { CatalogModule } from './modules/catalog/catalog.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { CatalogModule } from './modules/catalog/catalog.module';
     DatabaseModule,
     IdentityModule,
     CatalogModule,
+    InventoryModule,
   ],
   controllers: [AppController],
   providers: [
