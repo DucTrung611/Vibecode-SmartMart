@@ -32,4 +32,17 @@ export default tseslint.config(
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
+  {
+    // Test files lean on jest mocks and untyped HTTP response bodies —
+    // the unsafe-* rules exist to catch real production bugs, not the
+    // `any` that's inherent to mocking and asserting on JSON payloads.
+    files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+    },
+  },
 );
